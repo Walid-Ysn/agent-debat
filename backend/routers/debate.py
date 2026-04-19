@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from database import get_db, DebateSession, Argument
 from pydantic import BaseModel
 from typing import Optional
+from auth import verify_websocket_token
 
 router = APIRouter()
 
@@ -187,6 +188,11 @@ async def debate_websocket(
     Client sends JSON: { "round": 1, "contre_args": "..." }
     Server streams tokens as they're generated.
     """
+    token = websocket.query_params.get("token")
+    if not verify_websocket_token(token):
+        await websocket.close(code=1008)
+        return
+
     await websocket.accept()
     try:
         data = await websocket.receive_text()

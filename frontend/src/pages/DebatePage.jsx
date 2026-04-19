@@ -19,6 +19,15 @@ export default function DebatePage({ sessionId, navigate }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleDownloadReport = async () => {
+    try {
+      const fileUrl = await api.downloadReport(sessionId);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e.message || "Impossible de télécharger le rapport");
+    }
+  };
+
   useEffect(() => {
     api.getSession(sessionId).then(setSession).catch(() => setError("Session introuvable"));
     api.getArguments(sessionId).then((args) => {
@@ -114,14 +123,12 @@ export default function DebatePage({ sessionId, navigate }) {
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold px-2 py-1 rounded bg-green-900/40 text-green-400 border border-green-800">{session.domain}</span>
           {step === "done" && (
-            <a
-              href={api.downloadReport(sessionId)}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={handleDownloadReport}
               className="bg-green-700 hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all"
             >
               📥 Télécharger rapport PDF
-            </a>
+            </button>
           )}
         </div>
       </div>

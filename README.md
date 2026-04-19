@@ -101,7 +101,23 @@ DATABASE_URL=sqlite:///./agent_debat.db
 # Tu peux utiliser SUPABASE_DB_URL ou DATABASE_URL.
 # Exemple Direct Connection Supabase (pooler recommandé):
 # SUPABASE_DB_URL=postgresql://postgres.<project-ref>:<password>@aws-0-eu-west-3.pooler.supabase.com:6543/postgres?sslmode=require
+
+# Auth JWT (interface login)
+JWT_SECRET_KEY=replace-with-a-long-random-secret
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=480
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-me
 ```
+
+### Authentification
+
+- Une page login est disponible sur le frontend.
+- Le backend expose:
+    - `POST /api/auth/login` pour obtenir un token JWT
+    - `GET /api/auth/me` pour vérifier la session
+- Les routes métier (`/api/sessions`, `/api/debate`, `/api/reports`) nécessitent un token Bearer valide.
+- Le WebSocket de débat exige aussi un token JWT (transmis en query param).
 
 ### Supabase vs PostgreSQL
 
