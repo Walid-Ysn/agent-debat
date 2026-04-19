@@ -3,10 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import enum, os
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    project_root = Path(__file__).resolve().parents[1]
+    load_dotenv(project_root / ".env")
 except Exception:
     # Keep running even if python-dotenv is unavailable.
     pass

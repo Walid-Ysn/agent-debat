@@ -4,13 +4,15 @@ Pipeline RAG : upload documents → embeddings → ChromaDB → retrieval
 """
 import os, uuid
 from pathlib import Path
+from chromadb import PersistentClient
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
-UPLOAD_DIR  = Path("uploads")
-CHROMA_DIR  = Path("chroma_db")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+UPLOAD_DIR  = PROJECT_ROOT / "uploads"
+CHROMA_DIR  = PROJECT_ROOT / "chroma_db"
 UPLOAD_DIR.mkdir(exist_ok=True)
 CHROMA_DIR.mkdir(exist_ok=True)
 
@@ -30,6 +32,15 @@ def get_vectorstore(session_id: str):
         embedding_function=get_embeddings(),
         persist_directory=str(CHROMA_DIR),
     )
+
+
+def _collection_exists(session_id: str) -> bool:
+    client = PersistentClient(path=str(CHROMA_DIR))
+    try:
+        client.get_collection(name=f"session_{session_id}")
+        return True
+    except Exception:
+        return False
 
 def load_document(file_path: str):
     """Charge un document selon son extension."""
@@ -75,6 +86,10 @@ async def retrieve_context(session_id: str, query: str, k: int = 5) -> str:
     Retrouve les passages les plus pertinents pour une requête.
     Retourne un texte concaténé prêt à injecter dans le prompt agent.
     """
+    # Skip embeddings/model loading when no document has been indexed for this session.
+    if not _collection_exists(session_id):
+        return ""
+
     vectorstore = get_vectorstore(session_id)
     results     = vectorstore.similarity_search(query, k=k)
 
@@ -90,5 +105,7 @@ async def retrieve_context(session_id: str, query: str, k: int = 5) -> str:
 
 def delete_session_docs(session_id: str):
     """Supprime tous les vecteurs d'une session (nettoyage)."""
+    if not _collection_exists(session_id):
+        return
     vectorstore = get_vectorstore(session_id)
     vectorstore.delete_collection()

@@ -3,6 +3,7 @@ routers/debate.py
 Endpoints du débat : lancer un round, poser une question, WebSocket streaming.
 """
 import json
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from database import get_db, DebateSession, Argument
@@ -19,7 +20,8 @@ class QuestionPayload(BaseModel):
 async def _safe_retrieve_context(session_id: str, query: str, k: int) -> str:
     try:
         from rag.pipeline import retrieve_context
-        return await retrieve_context(session_id, query, k=k)
+        # Avoid blocking round endpoints on first-time embedding model downloads.
+        return await asyncio.wait_for(retrieve_context(session_id, query, k=k), timeout=8)
     except Exception:
         # If embeddings/model download is not ready yet, continue debate without RAG.
         return ""
