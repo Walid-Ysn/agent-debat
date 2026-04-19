@@ -55,7 +55,7 @@ async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    from pipeline import ingest_document
+    from rag.pipeline import ingest_document
 
     session = db.query(DebateSession).filter(DebateSession.id == session_id).first()
     if not session:

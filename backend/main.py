@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import sessions
-import debate
-import reports
+from routers import sessions, debate, reports
 from database import create_tables
 
 app = FastAPI(title="Agent Débat API", version="1.0.0")

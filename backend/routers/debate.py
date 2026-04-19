@@ -18,7 +18,7 @@ class QuestionPayload(BaseModel):
 
 async def _safe_retrieve_context(session_id: str, query: str, k: int) -> str:
     try:
-        from pipeline import retrieve_context
+        from rag.pipeline import retrieve_context
         return await retrieve_context(session_id, query, k=k)
     except Exception:
         # If embeddings/model download is not ready yet, continue debate without RAG.
@@ -49,7 +49,7 @@ def get_all_arguments_text(session_id: str, db: Session) -> str:
 # ── Round 1 : independent generation ─────────────────────────────────────────
 @router.post("/{session_id}/round/1")
 async def run_round_1(session_id: str, db: Session = Depends(get_db)):
-    from core import run_agent_pour, run_agent_contre
+    from agents.core import run_agent_pour, run_agent_contre
 
     session = db.query(DebateSession).filter(DebateSession.id == session_id).first()
     if not session:
@@ -77,7 +77,7 @@ async def run_round_1(session_id: str, db: Session = Depends(get_db)):
 # ── Round 2 : refutations ─────────────────────────────────────────────────────
 @router.post("/{session_id}/round/2")
 async def run_round_2(session_id: str, db: Session = Depends(get_db)):
-    from core import run_agent_pour, run_agent_contre
+    from agents.core import run_agent_pour, run_agent_contre
 
     session = db.query(DebateSession).filter(DebateSession.id == session_id).first()
     if not session:
@@ -111,7 +111,7 @@ async def run_round_2(session_id: str, db: Session = Depends(get_db)):
 # ── Arbitre : final verdict ───────────────────────────────────────────────────
 @router.post("/{session_id}/arbitre")
 async def run_arbitre(session_id: str, db: Session = Depends(get_db)):
-    from core import run_agent_arbitre
+    from agents.core import run_agent_arbitre
 
     session = db.query(DebateSession).filter(DebateSession.id == session_id).first()
     if not session:
@@ -132,7 +132,7 @@ async def run_arbitre(session_id: str, db: Session = Depends(get_db)):
 # ── Question from decision makers ─────────────────────────────────────────────
 @router.post("/{session_id}/question")
 async def ask_question(session_id: str, payload: QuestionPayload, db: Session = Depends(get_db)):
-    from core import run_agent_question
+    from agents.core import run_agent_question
 
     session = db.query(DebateSession).filter(DebateSession.id == session_id).first()
     if not session:
@@ -177,7 +177,7 @@ async def debate_websocket(
     agent_type: str,
     db: Session = Depends(get_db),
 ):
-    from core import stream_agent, PROMPT_POUR, PROMPT_CONTRE, PROMPT_REFUTATION_POUR, PROMPT_REFUTATION_CONTRE
+    from agents.core import stream_agent, PROMPT_POUR, PROMPT_CONTRE, PROMPT_REFUTATION_POUR, PROMPT_REFUTATION_CONTRE
 
     """
     WebSocket endpoint for real-time argument streaming.
