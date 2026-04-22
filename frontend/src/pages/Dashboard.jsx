@@ -13,6 +13,9 @@ export default function Dashboard({ navigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const completionRate = sessions.length ? Math.round((sessions.filter((s) => s.status === "FINISHED").length / sessions.length) * 100) : 0;
+  const momentum = Math.min(100, 40 + sessions.length * 7);
+
   useEffect(() => {
     api
       .getSessions()
@@ -22,67 +25,173 @@ export default function Dashboard({ navigate }) {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
-      <div className="flex items-center justify-between mb-10">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            <span className="text-green-400">Agent</span> <span className="text-white">Débat</span>
-          </h1>
-          <p className="text-gray-400 mt-1 text-sm">RH & Stratégie — Aide à la décision par IA contradictoire</p>
-        </div>
-        <button
-          onClick={navigate.toNew}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-green-900/40"
-        >
-          <span className="text-xl leading-none">＋</span> Nouveau débat
-        </button>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {[
-          { label: "Total sessions", value: sessions.length, color: "text-white" },
-          { label: "En cours", value: sessions.filter((s) => s.status === "DEBATING").length, color: "text-blue-400" },
-          { label: "Terminées", value: sessions.filter((s) => s.status === "FINISHED").length, color: "text-green-400" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-5 text-center">
-            <div className={`text-3xl font-bold ${color}`}>{value}</div>
-            <div className="text-gray-400 text-sm mt-1">{label}</div>
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
+      <header className="glass-panel--strong p-5 md:p-7 mb-6 stagger-entry">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="section-kicker mb-2">Executive Command Interface</p>
+            <h1 className="title-fusion text-3xl md:text-4xl font-bold leading-tight">
+              Debate Agent
+              <span className="block text-cyan-300">HR and Enterprise Strategy</span>
+            </h1>
+            <p className="text-slate-300 mt-3 max-w-2xl text-sm md:text-base">
+              Real-time contradictory intelligence for talent decisions, organizational planning, and strategic trade-off simulation.
+            </p>
           </div>
-        ))}
-      </div>
+          <button onClick={navigate.toNew} className="enterprise-button flex items-center gap-2 text-sm md:text-base">
+            <span className="text-lg leading-none">+</span>
+            Start New Debate
+          </button>
+        </div>
+      </header>
 
-      {loading && <div className="text-center py-20 text-gray-500">Chargement...</div>}
-      {error && <div className="bg-red-900/30 border border-red-700 text-red-400 rounded-xl p-4 text-sm">{error}</div>}
+      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: "Total Sessions", value: sessions.length, tone: "text-indigo-200" },
+          { label: "In Progress", value: sessions.filter((s) => s.status === "DEBATING").length, tone: "text-cyan-200" },
+          { label: "Completed", value: sessions.filter((s) => s.status === "FINISHED").length, tone: "text-emerald-200" },
+          { label: "Completion Rate", value: `${completionRate}%`, tone: "text-violet-200" },
+        ].map((item, idx) => (
+          <article key={item.label} className="glass-panel metric-card p-4 md:p-5 stagger-entry" style={{ animationDelay: `${idx * 90}ms` }}>
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-400">{item.label}</p>
+            <p className={`mt-2 text-3xl font-bold ${item.tone}`}>{item.value}</p>
+            <div className="mt-3 h-1.5 rounded-full bg-slate-900/70 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-300 to-violet-400"
+                style={{ width: `${Math.min(100, 24 + idx * 19 + (sessions.length > 0 ? 18 : 0))}%` }}
+              />
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid grid-cols-1 xl:grid-cols-[1.35fr_1fr] gap-4 mb-6">
+        <article className="glass-panel p-5 md:p-6 stagger-entry [animation-delay:120ms]">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <p className="section-kicker mb-1">HR Analytics</p>
+              <h2 className="section-heading text-xl">Decision Activity Dashboard</h2>
+            </div>
+            <div className="text-xs text-cyan-200 bg-cyan-500/10 border border-cyan-300/30 px-3 py-1 rounded-full">Live Feed</div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div className="neo-tile p-4">
+              <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Debate Throughput</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  { label: "Talent Acquisition", value: 82 },
+                  { label: "Workforce Planning", value: 68 },
+                  { label: "Strategic Governance", value: 91 },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-xs text-slate-300 mb-1">
+                      <span>{item.label}</span>
+                      <span>{item.value}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-900 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-300 to-emerald-300 data-flow"
+                        style={{ width: `${item.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="neo-tile p-4">
+              <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Enterprise Confidence Curve</p>
+              <div className="mt-4 h-[138px] relative overflow-hidden rounded-lg border border-indigo-300/20 bg-slate-950/55">
+                <svg viewBox="0 0 320 160" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6f7cff" />
+                      <stop offset="45%" stopColor="#2de4ff" />
+                      <stop offset="100%" stopColor="#2beab9" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 118 C40 102, 85 110, 122 82 C152 58, 198 72, 230 38 C252 16, 290 22, 320 12" fill="none" stroke="url(#lineGradient)" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-x-0 bottom-1 text-center text-[11px] text-slate-400">Quarterly strategic maturity trajectory</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="neo-tile p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Operational Momentum</p>
+              <p className="text-cyan-200 text-sm font-semibold">{momentum}%</p>
+            </div>
+            <div className="h-2.5 rounded-full bg-slate-950 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 data-flow" style={{ width: `${momentum}%` }} />
+            </div>
+          </div>
+        </article>
+
+        <article className="glass-panel p-5 md:p-6 stagger-entry [animation-delay:220ms]">
+          <p className="section-kicker mb-1">Strategy Simulation</p>
+          <h2 className="section-heading text-xl mb-4">Scenario Decision Tree</h2>
+
+          <div className="space-y-3">
+            {[
+              { level: "Root", node: "Invest in external leadership talent", impact: "High growth potential", color: "text-cyan-200" },
+              { level: "Branch A", node: "Internal upskilling acceleration", impact: "Cost-efficient, slower ramp", color: "text-emerald-200" },
+              { level: "Branch B", node: "Hybrid hiring and mentoring", impact: "Balanced risk profile", color: "text-violet-200" },
+            ].map((item, idx) => (
+              <div key={item.level} className="neo-tile p-3.5 hover:translate-y-[-1px] transition-transform">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">{item.level}</p>
+                    <p className={`mt-1 text-sm font-semibold ${item.color}`}>{item.node}</p>
+                  </div>
+                  <span className="text-[10px] px-2 py-1 rounded-full border border-slate-400/25 text-slate-300">Path {idx + 1}</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">{item.impact}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 text-xs text-slate-300 flex items-center gap-2">
+            <span className="pulse-dot text-cyan-300 bg-cyan-300" />
+            Model updates as debates complete and new evidence is uploaded.
+          </div>
+        </article>
+      </section>
+
+      {loading && <div className="text-center py-16 text-slate-400">Chargement...</div>}
+      {error && <div className="rounded-xl border border-rose-400/40 bg-rose-400/10 text-rose-200 p-4 text-sm mb-4">{error}</div>}
 
       {!loading && sessions.length === 0 && (
-        <div className="text-center py-20">
-          <div className="text-5xl mb-4">💬</div>
-          <p className="text-gray-400">Aucune session pour l'instant.</p>
-          <p className="text-gray-600 text-sm mt-1">Créez votre premier débat !</p>
+        <div className="glass-panel p-10 text-center">
+          <div className="text-5xl mb-3">AI</div>
+          <p className="text-slate-300 font-semibold">No strategic sessions yet.</p>
+          <p className="text-slate-400 text-sm mt-1">Launch your first enterprise debate to activate analytics.</p>
         </div>
       )}
 
-      <div className="space-y-3">
-        {sessions.map((s) => (
-          <div
+      <section className="space-y-3 mt-5">
+        {sessions.map((s, index) => (
+          <article
             key={s.id}
             onClick={() => navigate.toDebate(s.id)}
-            className="bg-gray-900 border border-gray-800 hover:border-green-700/50 rounded-xl p-5 cursor-pointer transition-all hover:bg-gray-800/80 group"
+            className="glass-panel p-4 md:p-5 cursor-pointer hover:border-cyan-300/40 hover:translate-y-[-1px] transition-all group stagger-entry"
+            style={{ animationDelay: `${140 + index * 70}ms` }}
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-green-900/40 text-green-400 border border-green-800">{s.domain}</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${STATUS_COLORS[s.status]}`}>{STATUS_LABELS[s.status]}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-400/15 border border-indigo-300/30 text-indigo-200">{s.domain}</span>
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLORS[s.status]}`}>{STATUS_LABELS[s.status]}</span>
                 </div>
-                <h3 className="text-white font-semibold text-base group-hover:text-green-300 transition-colors truncate">{s.title}</h3>
-                <p className="text-gray-500 text-sm mt-0.5 truncate">{s.decision}</p>
+                <h3 className="text-slate-100 font-semibold text-base group-hover:text-cyan-200 transition-colors truncate">{s.title}</h3>
+                <p className="text-slate-400 text-sm mt-1 truncate">{s.decision}</p>
               </div>
-              <div className="text-gray-600 text-xs whitespace-nowrap pt-1">{new Date(s.created_at).toLocaleDateString("fr-FR")}</div>
+              <div className="text-slate-500 text-xs whitespace-nowrap pt-1">{new Date(s.created_at).toLocaleDateString("fr-FR")}</div>
             </div>
-          </div>
+          </article>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

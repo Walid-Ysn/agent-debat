@@ -45,15 +45,23 @@ export default function App() {
   };
 
   if (checkingAuth) {
-    return <div className="min-h-screen grid place-items-center bg-gray-950 text-gray-400">Vérification de session...</div>;
+    return (
+      <div className="app-shell min-h-screen grid place-items-center px-4">
+        <div className="glass-panel--strong px-8 py-6 text-center">
+          <p className="section-kicker mb-2">Secure Access</p>
+          <p className="text-slate-200 font-semibold">Vérification de session...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white font-sans">
+    <div className="app-shell">
+      <div className="pointer-events-none fixed inset-0 hud-grid" />
       {page !== "login" && (
         <button
           onClick={navigate.logout}
-          className="fixed top-4 right-4 z-50 bg-gray-900 border border-gray-700 hover:border-red-500 hover:text-red-300 px-3 py-1.5 rounded-lg text-xs text-gray-300 transition-colors"
+          className="fixed top-4 right-4 z-50 ghost-button px-3.5 py-2 text-xs font-semibold"
         >
           Déconnexion
         </button>

@@ -1,23 +1,23 @@
 const TYPE_CONFIG = {
   POUR: {
     label: "Agent POUR",
-    emoji: "✅",
-    bg: "bg-green-950/40",
-    border: "border-green-800/50",
-    header: "bg-green-900/50",
-    text: "text-green-300",
-    dot: "bg-green-400",
-    roundLabel: "bg-green-900/60 text-green-400 border-green-800",
+    emoji: "P",
+    bg: "from-emerald-500/10 to-cyan-400/5",
+    border: "border-emerald-300/30",
+    header: "bg-emerald-400/10",
+    text: "text-emerald-100",
+    dot: "bg-emerald-300 text-emerald-300",
+    roundLabel: "bg-emerald-400/15 text-emerald-200 border-emerald-300/30",
   },
   CONTRE: {
     label: "Agent CONTRE",
-    emoji: "❌",
-    bg: "bg-red-950/30",
-    border: "border-red-800/40",
-    header: "bg-red-900/40",
-    text: "text-red-300",
-    dot: "bg-red-400",
-    roundLabel: "bg-red-900/60 text-red-400 border-red-800",
+    emoji: "C",
+    bg: "from-violet-500/12 to-rose-400/6",
+    border: "border-violet-300/30",
+    header: "bg-violet-400/10",
+    text: "text-violet-100",
+    dot: "bg-violet-300 text-violet-300",
+    roundLabel: "bg-violet-400/15 text-violet-200 border-violet-300/30",
   },
 };
 
@@ -27,22 +27,22 @@ export default function AgentPanel({ type, arguments: args = [], loading, stream
   const cfg = TYPE_CONFIG[type];
 
   return (
-    <div className={`rounded-2xl border ${cfg.bg} ${cfg.border} overflow-hidden`}>
-      <div className={`flex items-center gap-3 px-5 py-3.5 ${cfg.header}`}>
-        <span className="text-lg">{cfg.emoji}</span>
+    <div className={`rounded-2xl border ${cfg.border} overflow-hidden bg-gradient-to-br ${cfg.bg} backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.35)]`}>
+      <div className={`flex items-center gap-3 px-5 py-3.5 border-b border-white/10 ${cfg.header}`}>
+        <span className="text-xs h-7 w-7 inline-flex items-center justify-center rounded-full border border-current/50 font-bold">{cfg.emoji}</span>
         <span className={`font-bold ${cfg.text}`}>{cfg.label}</span>
-        <div className={`ml-auto w-2 h-2 rounded-full ${loading ? "animate-pulse " + cfg.dot : args.length > 0 ? cfg.dot : "bg-gray-600"}`} />
+        <div className={`ml-auto pulse-dot ${loading ? cfg.dot : args.length > 0 ? cfg.dot : "text-slate-500 bg-slate-500"}`} />
       </div>
 
       <div className="p-5 space-y-5 max-h-[520px] overflow-y-auto">
-        {args.length === 0 && !loading && !streamContent && <p className="text-gray-600 text-sm text-center py-8">En attente du Round 1...</p>}
+        {args.length === 0 && !loading && !streamContent && <p className="text-slate-500 text-sm text-center py-8">En attente du Round 1...</p>}
 
         {args.map((arg) => (
           <div key={arg.id} className="space-y-2">
             <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded border ${cfg.roundLabel}`}>
               {ROUND_LABELS[arg.round_number] || `Round ${arg.round_number}`}
             </span>
-            <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{formatArgument(arg.content)}</div>
+            <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{formatArgument(arg.content)}</div>
           </div>
         ))}
 
@@ -51,7 +51,7 @@ export default function AgentPanel({ type, arguments: args = [], loading, stream
             <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded border ${cfg.roundLabel} animate-pulse`}>
               En cours...
             </span>
-            <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
               {streamContent}
               <span className="inline-block w-1.5 h-4 bg-current ml-0.5 animate-pulse" />
             </div>
@@ -59,7 +59,7 @@ export default function AgentPanel({ type, arguments: args = [], loading, stream
         )}
 
         {loading && !streamContent && (
-          <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
+          <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
             <div className={`w-2 h-2 rounded-full ${cfg.dot} animate-bounce`} />
             <div className={`w-2 h-2 rounded-full ${cfg.dot} animate-bounce [animation-delay:0.15s]`} />
             <div className={`w-2 h-2 rounded-full ${cfg.dot} animate-bounce [animation-delay:0.3s]`} />

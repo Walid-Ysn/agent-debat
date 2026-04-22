@@ -44,46 +44,89 @@ export default function NewSession({ navigate }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10">
-      <button
-        onClick={navigate.toDashboard}
-        className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors"
-      >
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-10">
+      <button onClick={navigate.toDashboard} className="ghost-button px-3.5 py-2 text-sm mb-6">
         ← Retour au tableau de bord
       </button>
 
-      <h1 className="text-3xl font-bold mb-2">
-        <span className="text-green-400">Nouveau</span> débat
-      </h1>
-      <p className="text-gray-400 text-sm mb-8">Définissez la décision à soumettre aux deux agents IA.</p>
+      <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-5 items-start">
+        <section className="glass-panel--strong p-5 md:p-7 stagger-entry">
+          <p className="section-kicker mb-2">Session Designer</p>
+          <h1 className="title-fusion text-3xl md:text-4xl font-bold leading-tight">
+            Create Strategic
+            <span className="block text-cyan-300">Debate Scenario</span>
+          </h1>
+          <p className="text-slate-300 text-sm md:text-base mt-3 mb-6">
+            Build a high-context decision environment, inject supporting evidence, and orchestrate a controlled AI contradiction cycle.
+          </p>
 
-      {error && <div className="bg-red-900/30 border border-red-700 text-red-400 rounded-xl p-4 text-sm mb-6">{error}</div>}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            {[
+              { label: "Domain Scope", value: form.domain === "RH" ? "Human Resources" : "Enterprise Strategy" },
+              { label: "Evidence Files", value: files.length },
+              { label: "Readiness", value: form.title && form.decision ? "High" : "Draft" },
+            ].map((item) => (
+              <div key={item.label} className="neo-tile p-3.5">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">{item.label}</p>
+                <p className="text-sm mt-1 text-cyan-100 font-semibold">{item.value}</p>
+              </div>
+            ))}
+          </div>
 
-      <div className="space-y-5">
+          <div className="text-xs text-slate-300 flex items-center gap-2">
+            <span className="pulse-dot text-cyan-300 bg-cyan-300" />
+            Configuration integrity monitored in real-time.
+          </div>
+        </section>
+
+        <aside className="glass-panel p-5 md:p-6 stagger-entry [animation-delay:140ms]">
+          <p className="section-kicker mb-1">Simulation Blueprint</p>
+          <h2 className="section-heading text-xl mb-4">Decision Path Preview</h2>
+          <div className="space-y-3 text-sm">
+            {[
+              { step: "01", title: "Frame the question", desc: "Describe strategic trade-offs and expected outcomes." },
+              { step: "02", title: "Inject context", desc: "Attach policy documents, staffing data, and constraints." },
+              { step: "03", title: "Launch debate", desc: "Run contradiction rounds and capture final arbitration." },
+            ].map((item) => (
+              <div key={item.step} className="neo-tile p-3.5">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full border border-cyan-300/40 text-cyan-200">{item.step}</span>
+                  <p className="font-semibold text-slate-200">{item.title}</p>
+                </div>
+                <p className="text-xs text-slate-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
+
+      {error && <div className="rounded-xl border border-rose-400/40 bg-rose-400/10 text-rose-200 p-4 text-sm mt-5">{error}</div>}
+
+      <div className="glass-panel p-5 md:p-6 mt-5 space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">
-            Titre de la session <span className="text-red-400">*</span>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+            Titre de la session <span className="text-rose-300">*</span>
           </label>
           <input
             name="title"
             value={form.title}
             onChange={handleChange}
             placeholder="Ex : Recrutement poste Dev Senior — Juin 2025"
-            className="w-full bg-gray-900 border border-gray-700 focus:border-green-500 rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none transition-colors text-sm"
+            className="input-future text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">Domaine</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">Domaine</label>
           <div className="flex gap-3">
             {[
-              { value: "RH", label: "👥 Ressources Humaines" },
-              { value: "STRATEGIE", label: "📊 Stratégie" },
+              { value: "RH", label: "HR" },
+              { value: "STRATEGIE", label: "Enterprise Strategy" },
             ].map((choice) => (
               <button
                 key={choice.value}
                 onClick={() => setForm({ ...form, domain: choice.value })}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${form.domain === choice.value ? "bg-green-700 border-green-500 text-white" : "bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500"}`}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${form.domain === choice.value ? "bg-cyan-500/20 border-cyan-300/70 text-cyan-100" : "bg-slate-950/50 border-indigo-200/20 text-slate-400 hover:border-indigo-200/40"}`}
               >
                 {choice.label}
               </button>
@@ -92,8 +135,8 @@ export default function NewSession({ navigate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">
-            Décision à débattre <span className="text-red-400">*</span>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+            Décision à débattre <span className="text-rose-300">*</span>
           </label>
           <textarea
             name="decision"
@@ -101,13 +144,13 @@ export default function NewSession({ navigate }) {
             onChange={handleChange}
             rows={3}
             placeholder="Ex : Faut-il recruter un développeur senior externe ou promouvoir un junior interne ?"
-            className="w-full bg-gray-900 border border-gray-700 focus:border-green-500 rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none transition-colors text-sm resize-none"
+            className="input-future text-sm resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">
-            Contexte de l'entreprise <span className="text-gray-500 font-normal">(optionnel)</span>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+            Contexte de l'entreprise <span className="text-slate-500 font-normal">(optionnel)</span>
           </label>
           <textarea
             name="context"
@@ -115,25 +158,25 @@ export default function NewSession({ navigate }) {
             onChange={handleChange}
             rows={3}
             placeholder="Budget disponible, taille de l'équipe, contraintes, historique..."
-            className="w-full bg-gray-900 border border-gray-700 focus:border-green-500 rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none transition-colors text-sm resize-none"
+            className="input-future text-sm resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">
-            Documents <span className="text-gray-500 font-normal">(PDF, DOCX, CSV...)</span>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+            Documents <span className="text-slate-500 font-normal">(PDF, DOCX, CSV...)</span>
           </label>
           <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-gray-700 hover:border-green-600 rounded-xl p-8 text-center cursor-pointer transition-colors group"
+            className="border-2 border-dashed border-indigo-200/30 hover:border-cyan-300/70 rounded-xl p-8 text-center cursor-pointer transition-colors group bg-slate-950/35"
           >
-            <div className="text-3xl mb-2">📄</div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">
-              Glissez vos documents ici ou <span className="text-green-400 underline">parcourir</span>
+            <div className="text-3xl mb-2 text-cyan-200">▦</div>
+            <p className="text-slate-300 text-sm group-hover:text-cyan-100 transition-colors">
+              Glissez vos documents ici ou <span className="text-cyan-300 underline">parcourir</span>
             </p>
-            <p className="text-gray-600 text-xs mt-1">PDF, DOCX, XLSX, CSV, TXT</p>
+            <p className="text-slate-500 text-xs mt-1">PDF, DOCX, XLSX, CSV, TXT</p>
             <input
               ref={fileRef}
               type="file"
@@ -147,23 +190,23 @@ export default function NewSession({ navigate }) {
           {files.length > 0 && (
             <div className="mt-3 space-y-2">
               {files.map((f, i) => (
-                <div key={i} className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg px-4 py-2">
+                <div key={i} className="flex items-center justify-between bg-slate-950/65 border border-indigo-200/20 rounded-lg px-4 py-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-green-400 text-sm">📎</span>
-                    <span className="text-sm text-gray-300">{f.name}</span>
-                    <span className="text-xs text-gray-600">({(f.size / 1024).toFixed(1)} KB)</span>
+                    <span className="text-cyan-300 text-sm">◉</span>
+                    <span className="text-sm text-slate-200">{f.name}</span>
+                    <span className="text-xs text-slate-500">({(f.size / 1024).toFixed(1)} KB)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {uploadStatus[f.name] === "uploading" && <span className="text-blue-400 text-xs">Indexation...</span>}
-                    {uploadStatus[f.name] === "done" && <span className="text-green-400 text-xs">✓ Indexé</span>}
-                    {uploadStatus[f.name] === "error" && <span className="text-red-400 text-xs">✗ Erreur</span>}
+                    {uploadStatus[f.name] === "uploading" && <span className="text-cyan-300 text-xs">Indexation...</span>}
+                    {uploadStatus[f.name] === "done" && <span className="text-emerald-300 text-xs">✓ Indexé</span>}
+                    {uploadStatus[f.name] === "error" && <span className="text-rose-300 text-xs">✗ Erreur</span>}
                     {!uploadStatus[f.name] && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFile(i);
                         }}
-                        className="text-gray-600 hover:text-red-400 text-sm transition-colors"
+                        className="text-slate-500 hover:text-rose-300 text-sm transition-colors"
                       >
                         ✕
                       </button>
@@ -178,9 +221,9 @@ export default function NewSession({ navigate }) {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-green-900/40 text-sm mt-2"
+          className="enterprise-button w-full text-sm mt-2"
         >
-          {loading ? "Création en cours..." : "Lancer le débat →"}
+          {loading ? "Création en cours..." : "Lancer le débat"}
         </button>
       </div>
     </div>

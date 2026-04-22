@@ -14,9 +14,17 @@ export default function QuestionBox({ onAsk, disabled }) {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-      <h3 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-        <span>💬</span> Poser une question aux agents
+    <div className="glass-panel p-5">
+      <h3 className="text-slate-100 font-semibold text-sm mb-4 flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-2">
+          <span className="text-cyan-200">◉</span>
+          Poser une question aux agents
+        </span>
+        <span className="thinking-dots inline-flex gap-1 text-cyan-300">
+          <span />
+          <span />
+          <span />
+        </span>
       </h3>
 
       <div className="flex gap-3 mb-4">
@@ -28,7 +36,13 @@ export default function QuestionBox({ onAsk, disabled }) {
             key={type}
             onClick={() => setAgentType(type)}
             disabled={disabled}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all disabled:opacity-40 ${agentType === type ? active : inactive}`}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all disabled:opacity-40 ${
+              agentType === type
+                ? type === "POUR"
+                  ? "bg-emerald-400/15 text-emerald-100 border-emerald-300/60"
+                  : "bg-violet-400/15 text-violet-100 border-violet-300/60"
+                : "border-indigo-200/30 text-slate-400"
+            }`}
           >
             {label}
           </button>
@@ -42,12 +56,12 @@ export default function QuestionBox({ onAsk, disabled }) {
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           disabled={disabled || loading}
           placeholder={disabled ? "Session terminée" : "Votre question..."}
-          className="flex-1 bg-gray-800 border border-gray-700 focus:border-green-500 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 outline-none transition-colors text-sm disabled:opacity-40"
+          className="input-future flex-1 text-sm disabled:opacity-40"
         />
         <button
           onClick={handleSubmit}
           disabled={disabled || loading || !question.trim()}
-          className="bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm"
+          className="enterprise-button px-5 py-2.5 text-sm disabled:opacity-40"
         >
           {loading ? "..." : "Envoyer"}
         </button>
