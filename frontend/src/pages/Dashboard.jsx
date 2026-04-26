@@ -8,21 +8,85 @@ const STATUS_COLORS = {
 };
 const STATUS_LABELS = { PENDING: "En attente", DEBATING: "En cours", FINISHED: "Terminé" };
 
+const EMPTY_ANALYTICS = {
+  performance_metrics: {
+    total_sessions: 0,
+    in_progress: 0,
+    completed: 0,
+    completion_rate: 0,
+  },
+  performance: {
+    debate_throughput: {
+      talent_acquisition_score: 0,
+      workforce_planning_index: 0,
+      strategic_governance_rating: 0,
+    },
+    live_feed_activity: 0,
+    enterprise_confidence_curve: [],
+    operational_momentum: 0,
+  },
+  simulation: {
+    scenario_decision_paths: [],
+  },
+  ai_engines: {
+    standby: true,
+    thinking_loop: false,
+  },
+};
+
+function buildCurvePath(points) {
+  if (!points.length) return "";
+  if (points.length === 1) return "M0 140 L320 20";
+
+  const stepX = 320 / (points.length - 1);
+  return points
+    .map((value, idx) => {
+      const x = idx * stepX;
+      const y = 140 - (Math.max(0, Math.min(100, value)) * 1.2);
+      return `${idx === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
 export default function Dashboard({ navigate }) {
   const [sessions, setSessions] = useState([]);
+  const [analytics, setAnalytics] = useState(EMPTY_ANALYTICS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const completionRate = sessions.length ? Math.round((sessions.filter((s) => s.status === "FINISHED").length / sessions.length) * 100) : 0;
-  const momentum = Math.min(100, 40 + sessions.length * 7);
-
   useEffect(() => {
-    api
-      .getSessions()
-      .then(setSessions)
-      .catch(() => setError("Impossible de charger les sessions"))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        const [sessionsRes, analyticsRes] = await Promise.all([api.getSessions(), api.getOverviewAnalytics()]);
+        if (!mounted) return;
+        setSessions(sessionsRes || []);
+        setAnalytics(analyticsRes || EMPTY_ANALYTICS);
+      } catch {
+        if (!mounted) return;
+        setError("Impossible de charger les analytics");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    const timer = setInterval(loadData, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
   }, []);
+
+  const summary = analytics.performance_metrics || EMPTY_ANALYTICS.performance_metrics;
+  const throughput = analytics.performance?.debate_throughput || EMPTY_ANALYTICS.performance.debate_throughput;
+  const confidenceCurve = analytics.performance?.enterprise_confidence_curve || [];
+  const momentum = analytics.performance?.operational_momentum || 0;
+  const scenarioPaths = analytics.simulation?.scenario_decision_paths || [];
+  const liveFeed = analytics.performance?.live_feed_activity || 0;
+  const curvePath = buildCurvePath(confidenceCurve);
+  const hasActiveDebate = summary.total_sessions > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
@@ -47,10 +111,10 @@ export default function Dashboard({ navigate }) {
 
       <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Sessions", value: sessions.length, tone: "text-indigo-200" },
-          { label: "In Progress", value: sessions.filter((s) => s.status === "DEBATING").length, tone: "text-cyan-200" },
-          { label: "Completed", value: sessions.filter((s) => s.status === "FINISHED").length, tone: "text-emerald-200" },
-          { label: "Completion Rate", value: `${completionRate}%`, tone: "text-violet-200" },
+          { label: "Total Sessions", value: summary.total_sessions, tone: "text-indigo-200" },
+          { label: "In Progress", value: summary.in_progress, tone: "text-cyan-200" },
+          { label: "Completed", value: summary.completed, tone: "text-emerald-200" },
+          { label: "Completion Rate", value: `${summary.completion_rate}%`, tone: "text-violet-200" },
         ].map((item, idx) => (
           <article key={item.label} className="glass-panel metric-card p-4 md:p-5 stagger-entry" style={{ animationDelay: `${idx * 90}ms` }}>
             <p className="text-xs uppercase tracking-[0.14em] text-slate-400">{item.label}</p>
@@ -58,7 +122,7 @@ export default function Dashboard({ navigate }) {
             <div className="mt-3 h-1.5 rounded-full bg-slate-900/70 overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-300 to-violet-400"
-                style={{ width: `${Math.min(100, 24 + idx * 19 + (sessions.length > 0 ? 18 : 0))}%` }}
+                style={{ width: `${Math.max(0, Math.min(100, Number(item.value) || 0))}%` }}
               />
             </div>
           </article>
@@ -72,7 +136,7 @@ export default function Dashboard({ navigate }) {
               <p className="section-kicker mb-1">HR Analytics</p>
               <h2 className="section-heading text-xl">Decision Activity Dashboard</h2>
             </div>
-            <div className="text-xs text-cyan-200 bg-cyan-500/10 border border-cyan-300/30 px-3 py-1 rounded-full">Live Feed</div>
+            <div className="text-xs text-cyan-200 bg-cyan-500/10 border border-cyan-300/30 px-3 py-1 rounded-full">Live Feed {liveFeed}%</div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -80,9 +144,9 @@ export default function Dashboard({ navigate }) {
               <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Debate Throughput</p>
               <div className="mt-4 space-y-3">
                 {[
-                  { label: "Talent Acquisition", value: 82 },
-                  { label: "Workforce Planning", value: 68 },
-                  { label: "Strategic Governance", value: 91 },
+                  { label: "Talent Acquisition", value: Math.round(throughput.talent_acquisition_score || 0) },
+                  { label: "Workforce Planning", value: Math.round(throughput.workforce_planning_index || 0) },
+                  { label: "Strategic Governance", value: Math.round(throughput.strategic_governance_rating || 0) },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs text-slate-300 mb-1">
@@ -103,16 +167,21 @@ export default function Dashboard({ navigate }) {
             <div className="neo-tile p-4">
               <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Enterprise Confidence Curve</p>
               <div className="mt-4 h-[138px] relative overflow-hidden rounded-lg border border-indigo-300/20 bg-slate-950/55">
-                <svg viewBox="0 0 320 160" className="w-full h-full">
-                  <defs>
-                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#6f7cff" />
-                      <stop offset="45%" stopColor="#2de4ff" />
-                      <stop offset="100%" stopColor="#2beab9" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0 118 C40 102, 85 110, 122 82 C152 58, 198 72, 230 38 C252 16, 290 22, 320 12" fill="none" stroke="url(#lineGradient)" strokeWidth="4" strokeLinecap="round" />
-                </svg>
+                {!!curvePath && (
+                  <svg viewBox="0 0 320 160" className="w-full h-full">
+                    <defs>
+                      <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#6f7cff" />
+                        <stop offset="45%" stopColor="#2de4ff" />
+                        <stop offset="100%" stopColor="#2beab9" />
+                      </linearGradient>
+                    </defs>
+                    <path d={curvePath} fill="none" stroke="url(#lineGradient)" strokeWidth="4" strokeLinecap="round" />
+                  </svg>
+                )}
+                {!curvePath && (
+                  <div className="h-full grid place-items-center text-xs text-slate-500">Aucune courbe disponible tant qu aucun debat n est lance</div>
+                )}
                 <div className="absolute inset-x-0 bottom-1 text-center text-[11px] text-slate-400">Quarterly strategic maturity trajectory</div>
               </div>
             </div>
@@ -121,10 +190,10 @@ export default function Dashboard({ navigate }) {
           <div className="neo-tile p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs tracking-[0.14em] uppercase text-slate-400">Operational Momentum</p>
-              <p className="text-cyan-200 text-sm font-semibold">{momentum}%</p>
+              <p className="text-cyan-200 text-sm font-semibold">{Math.round(momentum)}%</p>
             </div>
             <div className="h-2.5 rounded-full bg-slate-950 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 data-flow" style={{ width: `${momentum}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 data-flow" style={{ width: `${Math.round(momentum)}%` }} />
             </div>
           </div>
         </article>
@@ -134,18 +203,16 @@ export default function Dashboard({ navigate }) {
           <h2 className="section-heading text-xl mb-4">Scenario Decision Tree</h2>
 
           <div className="space-y-3">
-            {[
-              { level: "Root", node: "Invest in external leadership talent", impact: "High growth potential", color: "text-cyan-200" },
-              { level: "Branch A", node: "Internal upskilling acceleration", impact: "Cost-efficient, slower ramp", color: "text-emerald-200" },
-              { level: "Branch B", node: "Hybrid hiring and mentoring", impact: "Balanced risk profile", color: "text-violet-200" },
-            ].map((item, idx) => (
+            {(scenarioPaths.length ? scenarioPaths : [
+              { level: "Root", node: "Simulation inactive", impact: "Launch a debate to generate scenario branches", path: "Path 1" },
+            ]).map((item, idx) => (
               <div key={item.level} className="neo-tile p-3.5 hover:translate-y-[-1px] transition-transform">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">{item.level}</p>
-                    <p className={`mt-1 text-sm font-semibold ${item.color}`}>{item.node}</p>
+                    <p className={`mt-1 text-sm font-semibold ${idx === 0 ? "text-cyan-200" : idx === 1 ? "text-emerald-200" : "text-violet-200"}`}>{item.node}</p>
                   </div>
-                  <span className="text-[10px] px-2 py-1 rounded-full border border-slate-400/25 text-slate-300">Path {idx + 1}</span>
+                  <span className="text-[10px] px-2 py-1 rounded-full border border-slate-400/25 text-slate-300">{item.path || `Path ${idx + 1}`}</span>
                 </div>
                 <p className="text-xs text-slate-400 mt-2">{item.impact}</p>
               </div>
@@ -153,8 +220,10 @@ export default function Dashboard({ navigate }) {
           </div>
 
           <div className="mt-4 text-xs text-slate-300 flex items-center gap-2">
-            <span className="pulse-dot text-cyan-300 bg-cyan-300" />
-            Model updates as debates complete and new evidence is uploaded.
+            <span className={`pulse-dot ${analytics.ai_engines?.thinking_loop ? "text-cyan-300 bg-cyan-300" : "text-slate-500 bg-slate-500"}`} />
+            {hasActiveDebate
+              ? "Model updates as debates progress and evidence evolves."
+              : "AI engines in standby mode. Start New Debate to activate analytics."}
           </div>
         </article>
       </section>

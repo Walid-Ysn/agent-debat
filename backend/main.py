@@ -1,6 +1,6 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import sessions, debate, reports, auth
+from routers import sessions, debate, reports, auth, analytics
 from database import create_tables
 from auth import get_current_user
 
@@ -35,6 +35,12 @@ app.include_router(
     reports.router,
     prefix="/api/reports",
     tags=["Reports"],
+    dependencies=[Depends(get_current_user)],
+)
+app.include_router(
+    analytics.router,
+    prefix="/api/analytics",
+    tags=["Analytics"],
     dependencies=[Depends(get_current_user)],
 )
 
