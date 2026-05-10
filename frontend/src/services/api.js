@@ -80,6 +80,8 @@ export const api = {
       body: JSON.stringify({ question, agent_type: agentType }),
     }),
   getArguments: (sessionId) => request(`/debate/${sessionId}/arguments`),
+  getOverviewAnalytics: () => request("/analytics/overview"),
+  getSessionAnalytics: (sessionId) => request(`/analytics/session/${sessionId}`),
   downloadReport: async (sessionId) => {
     const token = getToken();
     const res = await fetch(`${BASE}/reports/${sessionId}/pdf`, {

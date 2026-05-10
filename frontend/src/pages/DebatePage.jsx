@@ -13,12 +13,43 @@ const STEPS = [
   { key: "done", label: "Terminé", desc: "Rapport disponible" },
 ];
 
+const EMPTY_SESSION_ANALYTICS = {
+  stage: "idle",
+  progress: 0,
+  ai_decision: {
+    argument_weights: 0,
+    conflict_signals: 0,
+    strategy_confidence_score: 0,
+    economic_efficiency: 0,
+    talent_risk: 0,
+    execution_speed: 0,
+    time_to_impact: 0,
+  },
+  modules: {
+    ai_thinking_loop_status: false,
+    standby_mode: true,
+  },
+  report: {
+    available: false,
+  },
+};
+
 export default function DebatePage({ sessionId, navigate }) {
   const [session, setSession] = useState(null);
   const [arguments_, setArguments] = useState([]);
+  const [analytics, setAnalytics] = useState(EMPTY_SESSION_ANALYTICS);
   const [step, setStep] = useState("idle");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const fetchSessionAnalytics = async () => {
+    try {
+      const analyticsRes = await api.getSessionAnalytics(sessionId);
+      setAnalytics(analyticsRes || EMPTY_SESSION_ANALYTICS);
+    } catch {
+      // Keep existing analytics state if temporary fetch fails.
+    }
+  };
 
   const handleDownloadReport = async () => {
     try {
@@ -30,13 +61,39 @@ export default function DebatePage({ sessionId, navigate }) {
   };
 
   useEffect(() => {
-    api.getSession(sessionId).then(setSession).catch(() => setError("Session introuvable"));
-    api.getArguments(sessionId).then((args) => {
-      setArguments(args);
-      if (args.some((a) => a.agent_type === "ARBITRE")) setStep("done");
-      else if (args.some((a) => a.round_number === 2)) setStep("questions");
-      else if (args.some((a) => a.round_number === 1)) setStep("round2");
-    });
+    let mounted = true;
+
+    const loadInitial = async () => {
+      try {
+        const [sessionRes, argsRes, analyticsRes] = await Promise.all([
+          api.getSession(sessionId),
+          api.getArguments(sessionId),
+          api.getSessionAnalytics(sessionId),
+        ]);
+        if (!mounted) return;
+
+        setSession(sessionRes);
+        setArguments(argsRes || []);
+        setAnalytics(analyticsRes || EMPTY_SESSION_ANALYTICS);
+
+        const args = argsRes || [];
+        if (args.some((a) => a.agent_type === "ARBITRE")) setStep("done");
+        else if (args.some((a) => a.round_number === 2)) setStep("questions");
+        else if (args.some((a) => a.round_number === 1)) setStep("round2");
+      } catch {
+        if (mounted) setError("Session introuvable");
+      }
+    };
+
+    loadInitial();
+    const timer = setInterval(() => {
+      if (mounted) fetchSessionAnalytics();
+    }, 2500);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
   }, [sessionId]);
 
   const runRound1 = async () => {
@@ -50,6 +107,7 @@ export default function DebatePage({ sessionId, navigate }) {
         { agent_type: "CONTRE", round_number: 1, content: res.contre, id: Date.now() + 1 },
       ]);
       setStep("round2");
+      await fetchSessionAnalytics();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -68,6 +126,7 @@ export default function DebatePage({ sessionId, navigate }) {
         { agent_type: "CONTRE", round_number: 2, content: res.contre, id: Date.now() + 1 },
       ]);
       setStep("questions");
+      await fetchSessionAnalytics();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -82,6 +141,7 @@ export default function DebatePage({ sessionId, navigate }) {
       const res = await api.runArbitre(sessionId);
       setArguments((prev) => [...prev, { agent_type: "ARBITRE", round_number: 99, content: res.verdict, id: Date.now() }]);
       setStep("done");
+      await fetchSessionAnalytics();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -101,6 +161,7 @@ export default function DebatePage({ sessionId, navigate }) {
           id: Date.now(),
         },
       ]);
+      await fetchSessionAnalytics();
     } catch (e) {
       setError(e.message);
     }
@@ -110,6 +171,9 @@ export default function DebatePage({ sessionId, navigate }) {
   const pourArgs = arguments_.filter((a) => a.agent_type === "POUR");
   const contreArgs = arguments_.filter((a) => a.agent_type === "CONTRE");
   const arbitre = arguments_.find((a) => a.agent_type === "ARBITRE");
+  const ai = analytics.ai_decision || EMPTY_SESSION_ANALYTICS.ai_decision;
+  const modules = analytics.modules || EMPTY_SESSION_ANALYTICS.modules;
+  const reportAvailable = !!analytics.report?.available;
 
   if (!session) {
     return <div className="flex items-center justify-center min-h-screen text-slate-400">{error || "Chargement..."}</div>;
@@ -124,7 +188,7 @@ export default function DebatePage({ sessionId, navigate }) {
           </button>
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-400/15 text-indigo-200 border border-indigo-300/30">{session.domain}</span>
-          {step === "done" && (
+          {(step === "done" || reportAvailable) && (
             <button
               onClick={handleDownloadReport}
               className="enterprise-button text-xs"
@@ -166,16 +230,16 @@ export default function DebatePage({ sessionId, navigate }) {
       {error && <div className="rounded-xl border border-rose-400/40 bg-rose-400/10 text-rose-200 p-4 text-sm mb-6">{error}</div>}
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4 mb-5">
-        <Mechanism3D stage={step} />
+        <Mechanism3D stage={step} analytics={analytics} />
 
         <section className="glass-panel p-5 md:p-6">
           <p className="section-kicker mb-1">Strategy Simulation</p>
           <h3 className="section-heading text-lg mb-4">Adaptive Decision Tree</h3>
           <div className="space-y-3">
             {[
-              { name: "Economic Efficiency", score: 81, detail: "Budget coherence and ROI outlook" },
-              { name: "Talent Risk", score: 64, detail: "Capability gaps and retention pressure" },
-              { name: "Execution Speed", score: 74, detail: "Time-to-impact under current constraints" },
+              { name: "Economic Efficiency", score: Math.round(ai.economic_efficiency || 0), detail: "Budget coherence and ROI outlook" },
+              { name: "Talent Risk", score: Math.round(ai.talent_risk || 0), detail: "Capability gaps and retention pressure" },
+              { name: "Execution Speed", score: Math.round(ai.execution_speed || 0), detail: `Time-to-impact: ${ai.time_to_impact || 0} days` },
             ].map((node) => (
               <div key={node.name} className="neo-tile p-3.5">
                 <div className="flex justify-between text-xs text-slate-300 mb-1.5">
@@ -195,10 +259,10 @@ export default function DebatePage({ sessionId, navigate }) {
 
           <div className="mt-4 flex items-center justify-between text-xs text-slate-300">
             <span className="inline-flex items-center gap-2">
-              <span className="pulse-dot text-cyan-300 bg-cyan-300" />
-              AI thinking loop active
+              <span className={`pulse-dot ${modules.ai_thinking_loop_status ? "text-cyan-300 bg-cyan-300" : "text-slate-500 bg-slate-500"}`} />
+              {modules.ai_thinking_loop_status ? "AI thinking loop active" : "AI engines in standby mode"}
             </span>
-            <span className="thinking-dots inline-flex gap-1 text-cyan-300">
+            <span className={`thinking-dots inline-flex gap-1 ${modules.ai_thinking_loop_status ? "text-cyan-300" : "text-slate-600"}`}>
               <span />
               <span />
               <span />
