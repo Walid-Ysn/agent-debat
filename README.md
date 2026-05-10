@@ -59,11 +59,21 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Lancer le serveur
-uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8000
 ```
 
 API disponible sur : http://localhost:8000
 Documentation Swagger : http://localhost:8000/docs
+
+### Démarrage rapide sur Windows
+
+Pour ouvrir le frontend, le backend et Ollama dans trois terminaux séparés, lance:
+
+```powershell
+.\start-dev.ps1
+```
+
+Le script suppose que le venv racine `.venv` existe déjà et que `ollama` est disponible dans le `PATH`.
 
 ### 3. Frontend React
 
